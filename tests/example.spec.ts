@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
+import 'dotenv/config'
+
+test.beforeEach(async ({ page }) => {
+  await page.goto(process.env.BASE_URL);
+});
 
 test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Playwright/);
 });
 
 test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
   // Click the get started link.
   await page.getByRole('link', { name: 'Get started' }).click();
 

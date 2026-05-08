@@ -1,7 +1,10 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { checkNumberOfTodosInLocalStorage, checkNumberOfCompletedTodosInLocalStorage, checkTodosInLocalStorage } from '../utils/check-utils';
+import { createDefaultTodos } from '../utils/to-do-utilities';
+import 'dotenv/config';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('https://demo.playwright.dev/todomvc');
+  await page.goto(process.env.BASE_URL);
 });
 
 const TODO_ITEMS = [
@@ -52,7 +55,7 @@ test.describe('New Todo', () => {
 
   test('should append new items to the bottom of the list', async ({ page }) => {
     // Create 3 items.
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
 
     // create a todo count locator
     const todoCount = page.getByTestId('todo-count')
@@ -71,7 +74,7 @@ test.describe('New Todo', () => {
 
 test.describe('Mark all as completed', () => {
   test.beforeEach(async ({ page }) => {
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
     await checkNumberOfTodosInLocalStorage(page, 3);
   });
 
@@ -172,7 +175,7 @@ test.describe('Item', () => {
   });
 
   test('should allow me to edit an item', async ({ page }) => {
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
 
     const todoItems = page.getByTestId('todo-item');
     const secondTodo = todoItems.nth(1);
@@ -193,7 +196,7 @@ test.describe('Item', () => {
 
 test.describe('Editing', () => {
   test.beforeEach(async ({ page }) => {
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
     await checkNumberOfTodosInLocalStorage(page, 3);
   });
 
@@ -279,7 +282,7 @@ test.describe('Counter', () => {
 
 test.describe('Clear completed button', () => {
   test.beforeEach(async ({ page }) => {
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
   });
 
   test('should display the correct text', async ({ page }) => {
@@ -332,7 +335,7 @@ test.describe('Persistence', () => {
 
 test.describe('Routing', () => {
   test.beforeEach(async ({ page }) => {
-    await createDefaultTodos(page);
+    await createDefaultTodos(page, TODO_ITEMS);
     // make sure the app had a chance to save updated todos in storage
     // before navigating to a new view, otherwise the items can get lost :(
     // in some frameworks like Durandal
@@ -407,31 +410,3 @@ test.describe('Routing', () => {
     await expect(completedLink).toHaveClass('selected');
   });
 });
-
-async function createDefaultTodos(page: Page) {
-  // create a new todo locator
-  const newTodo = page.getByPlaceholder('What needs to be done?');
-
-  for (const item of TODO_ITEMS) {
-    await newTodo.fill(item);
-    await newTodo.press('Enter');
-  }
-}
-
-async function checkNumberOfTodosInLocalStorage(page: Page, expected: number) {
-  return await page.waitForFunction(e => {
-    return JSON.parse(localStorage['react-todos']).length === e;
-  }, expected);
-}
-
-async function checkNumberOfCompletedTodosInLocalStorage(page: Page, expected: number) {
-  return await page.waitForFunction(e => {
-    return JSON.parse(localStorage['react-todos']).filter((todo: any) => todo.completed).length === e;
-  }, expected);
-}
-
-async function checkTodosInLocalStorage(page: Page, title: string) {
-  return await page.waitForFunction(t => {
-    return JSON.parse(localStorage['react-todos']).map((todo: any) => todo.title).includes(t);
-  }, title);
-}
